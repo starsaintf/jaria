@@ -96,6 +96,27 @@ int OpenSSLTLSSession::setSNIHostname(const std::string& hostname)
   return TLS_ERR_OK;
 }
 
+int OpenSSLTLSSession::setApplicationProtocols(
+    const std::vector<std::string>& protocols)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_TLSEXT)
+  if (tlsContext_->getSide() != TLS_CLIENT) {
+    return TLS_ERR_OK;
+  }
+  auto encoded = encodeTLSApplicationProtocols(protocols);
+  if (encoded.empty()) {
+    return TLS_ERR_OK;
+  }
+  ERR_clear_error();
+  if (SSL_set_alpn_protos(ssl_, encoded.data(),
+                          static_cast<unsigned int>(encoded.size())) != 0) {
+    rv_ = -1;
+    return TLS_ERR_ERROR;
+  }
+#endif // OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_TLSEXT)
+  return TLS_ERR_OK;
+}
+
 int OpenSSLTLSSession::closeConnection()
 {
   ERR_clear_error();
@@ -171,6 +192,7 @@ ssize_t OpenSSLTLSSession::readData(void* data, size_t len)
 int OpenSSLTLSSession::handshake(TLSVersion& version)
 {
   ERR_clear_error();
+  negotiatedApplicationProtocol_.clear();
   if (tlsContext_->getSide() == TLS_CLIENT) {
     rv_ = SSL_connect(ssl_);
   }
@@ -217,6 +239,15 @@ int OpenSSLTLSSession::handshake(TLSVersion& version)
     version = TLS_PROTO_NONE;
     break;
   }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_TLSEXT)
+  const unsigned char* selected = nullptr;
+  unsigned int selectedLen = 0;
+  SSL_get0_alpn_selected(ssl_, &selected, &selectedLen);
+  negotiatedApplicationProtocol_.assign(
+      selectedLen == 0 ? "" : reinterpret_cast<const char*>(selected),
+      selectedLen == 0 ? 0 : selectedLen);
+#endif // OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_TLSEXT)
 
   return TLS_ERR_OK;
 }

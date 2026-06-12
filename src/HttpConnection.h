@@ -53,6 +53,9 @@ class Option;
 class Segment;
 class SocketCore;
 class SocketRecvBuffer;
+#ifdef HAVE_LIBNGHTTP2
+class Http2Connection;
+#endif // HAVE_LIBNGHTTP2
 
 class HttpRequestEntry {
 private:
@@ -84,6 +87,10 @@ private:
   std::shared_ptr<SocketCore> socket_;
   std::shared_ptr<SocketRecvBuffer> socketRecvBuffer_;
   SocketBuffer socketBuffer_;
+
+#ifdef HAVE_LIBNGHTTP2
+  std::shared_ptr<Http2Connection> http2Connection_;
+#endif // HAVE_LIBNGHTTP2
 
   HttpRequestEntries outstandingHttpRequests_;
 
@@ -128,6 +135,10 @@ public:
   bool sendBufferIsEmpty() const;
 
   void sendPendingData();
+
+  void enableHTTP2();
+
+  bool isHTTP2Enabled() const;
 
   const std::shared_ptr<SocketRecvBuffer>& getSocketRecvBuffer() const
   {

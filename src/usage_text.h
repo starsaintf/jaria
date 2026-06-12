@@ -190,6 +190,9 @@
     "                              required.")
 #define TEXT_ENABLE_HTTP_KEEP_ALIVE                                     \
   _(" --enable-http-keep-alive[=true|false] Enable HTTP/1.1 persistent connection.")
+#define TEXT_ENABLE_HTTP2                                               \
+  _(" --enable-http2[=true|false] Offer HTTP/2 over TLS if aria2 is built\n" \
+    "                              with libnghttp2.")
 #define TEXT_ENABLE_HTTP_PIPELINING                                     \
   _(" --enable-http-pipelining[=true|false] Enable HTTP/1.1 pipelining.")
 #define TEXT_CHECK_INTEGRITY                                            \

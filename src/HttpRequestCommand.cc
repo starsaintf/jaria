@@ -42,6 +42,7 @@
 #include "HttpResponseCommand.h"
 #include "HttpConnection.h"
 #include "HttpRequest.h"
+#include "HttpProtocolConfig.h"
 #include "SegmentMan.h"
 #include "Segment.h"
 #include "Option.h"
@@ -126,11 +127,30 @@ bool HttpRequestCommand::executeInternal()
   if (httpConnection_->sendBufferIsEmpty()) {
 #ifdef ENABLE_SSL
     if (getRequest()->getProtocol() == "https") {
+      auto protocols = getHTTPApplicationProtocols(getOption().get());
+      if (getRequest()->isHTTP2Disabled() ||
+          getDownloadEngine()->isHTTP2DisabledForOrigin(getRequest().get())) {
+        protocols.erase(std::remove(protocols.begin(), protocols.end(),
+                                    A2_ALPN_HTTP2),
+                        protocols.end());
+      }
+      getSocket()->setTLSApplicationProtocols(protocols);
       if (!getSocket()->tlsConnect(getRequest()->getHost())) {
         setReadCheckSocketIf(getSocket(), getSocket()->wantRead());
         setWriteCheckSocketIf(getSocket(), getSocket()->wantWrite());
         addCommandSelf();
         return false;
+      }
+      if (getSocket()->getNegotiatedTLSApplicationProtocol() ==
+          A2_ALPN_HTTP2) {
+#  ifdef HAVE_LIBNGHTTP2
+        httpConnection_->enableHTTP2();
+        getRequest()->setPipeliningHint(false);
+        getRequest()->setMaxPipelinedRequest(1);
+#  else  // !HAVE_LIBNGHTTP2
+        throw DL_ABORT_EX("HTTP/2 was negotiated, but aria2 was built without "
+                          "libnghttp2 support.");
+#  endif // !HAVE_LIBNGHTTP2
       }
     }
 #endif // ENABLE_SSL
@@ -190,6 +210,9 @@ bool HttpRequestCommand::executeInternal()
               createHttpRequest(getRequest(), getFileEntry(), segment,
                                 getOption(), getRequestGroup(),
                                 getDownloadEngine(), proxyRequest_, endOffset));
+          if (httpConnection_->isHTTP2Enabled()) {
+            break;
+          }
         }
       }
     }

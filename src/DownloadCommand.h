@@ -37,13 +37,18 @@
 
 #include "AbstractCommand.h"
 
+#include <string>
 #include <unistd.h>
 
 namespace aria2 {
 
 class PeerStat;
+class Segment;
 class StreamFilter;
 class MessageDigest;
+
+std::string createUnexpectedEOFMessage(
+    const std::shared_ptr<Segment>& segment);
 
 class DownloadCommand : public AbstractCommand {
 private:

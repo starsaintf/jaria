@@ -121,6 +121,7 @@ SRCS =  \
 	HttpDownloadCommand.cc HttpDownloadCommand.h\
 	HttpHeader.cc HttpHeader.h\
 	HttpHeaderProcessor.cc HttpHeaderProcessor.h\
+	HttpProtocolConfig.cc HttpProtocolConfig.h\
 	HttpInitiateConnectionCommand.cc HttpInitiateConnectionCommand.h\
 	HttpListenCommand.cc HttpListenCommand.h\
 	HttpProxyRequestCommand.cc HttpProxyRequestCommand.h\
@@ -322,8 +323,12 @@ SRCS += EpollEventPoll.cc EpollEventPoll.h
 endif # HAVE_EPOLL
 
 if ENABLE_SSL
-SRCS += TLSContext.h TLSSession.h
+SRCS += TLSContext.h TLSSession.cc TLSSession.h
 endif # ENABLE_SSL
+
+if HAVE_LIBNGHTTP2
+SRCS += Http2Connection.cc Http2Connection.h
+endif # HAVE_LIBNGHTTP2
 
 if USE_APPLE_MD
 SRCS += AppleMessageDigestImpl.cc
@@ -713,6 +718,7 @@ AM_CPPFLAGS = \
 	@LIBGCRYPT_CFLAGS@ \
 	@LIBSSH2_CFLAGS@ \
 	@LIBCARES_CFLAGS@ \
+	@LIBNGHTTP2_CFLAGS@ \
 	@WSLAY_CFLAGS@ \
 	@TCMALLOC_CFLAGS@ \
 	@JEMALLOC_CFLAGS@
@@ -736,6 +742,7 @@ EXTLDADD = @ALLOCA@ \
 	@LIBGCRYPT_LIBS@ \
 	@LIBSSH2_LIBS@ \
 	@LIBCARES_LIBS@ \
+	@LIBNGHTTP2_LIBS@ \
 	@WSLAY_LIBS@ \
 	@TCMALLOC_LIBS@ \
 	@JEMALLOC_LIBS@ \

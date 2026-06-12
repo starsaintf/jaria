@@ -56,7 +56,12 @@ ssize_t SocketRecvBuffer::recv()
     A2_LOG_DEBUG("Buffer full");
     return 0;
   }
-  socket_->readData(last_, n);
+  if (dataSource_) {
+    dataSource_->readData(last_, n);
+  }
+  else {
+    socket_->readData(last_, n);
+  }
   last_ += n;
   return n;
 }

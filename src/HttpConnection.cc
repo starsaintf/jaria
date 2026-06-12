@@ -42,6 +42,9 @@
 #include "LogFactory.h"
 #include "DlRetryEx.h"
 #include "DlAbortEx.h"
+#ifdef HAVE_LIBNGHTTP2
+#  include "Http2Connection.h"
+#endif // HAVE_LIBNGHTTP2
 #include "Request.h"
 #include "Segment.h"
 #include "HttpRequest.h"
@@ -135,6 +138,12 @@ void HttpConnection::sendRequest(std::unique_ptr<HttpRequest> httpRequest,
 
 void HttpConnection::sendRequest(std::unique_ptr<HttpRequest> httpRequest)
 {
+#ifdef HAVE_LIBNGHTTP2
+  if (http2Connection_) {
+    http2Connection_->submitRequest(std::move(httpRequest));
+    return;
+  }
+#endif // HAVE_LIBNGHTTP2
   auto req = httpRequest->createRequest();
   sendRequest(std::move(httpRequest), std::move(req));
 }
@@ -147,6 +156,11 @@ void HttpConnection::sendProxyRequest(std::unique_ptr<HttpRequest> httpRequest)
 
 std::unique_ptr<HttpResponse> HttpConnection::receiveResponse()
 {
+#ifdef HAVE_LIBNGHTTP2
+  if (http2Connection_) {
+    return http2Connection_->receiveResponse();
+  }
+#endif // HAVE_LIBNGHTTP2
   if (outstandingHttpRequests_.empty()) {
     throw DL_ABORT_EX(EX_NO_HTTP_REQUEST_ENTRY_FOUND);
   }
@@ -195,9 +209,44 @@ bool HttpConnection::isIssued(const std::shared_ptr<Segment>& segment) const
 
 bool HttpConnection::sendBufferIsEmpty() const
 {
+#ifdef HAVE_LIBNGHTTP2
+  if (http2Connection_) {
+    return http2Connection_->sendBufferIsEmpty();
+  }
+#endif // HAVE_LIBNGHTTP2
   return socketBuffer_.sendBufferIsEmpty();
 }
 
-void HttpConnection::sendPendingData() { socketBuffer_.send(); }
+void HttpConnection::sendPendingData()
+{
+#ifdef HAVE_LIBNGHTTP2
+  if (http2Connection_) {
+    http2Connection_->sendPendingData();
+    return;
+  }
+#endif // HAVE_LIBNGHTTP2
+  socketBuffer_.send();
+}
+
+void HttpConnection::enableHTTP2()
+{
+#ifdef HAVE_LIBNGHTTP2
+  if (!http2Connection_) {
+    http2Connection_ = std::make_shared<Http2Connection>(cuid_, socket_);
+    socketRecvBuffer_->setDataSource(http2Connection_);
+  }
+#else  // !HAVE_LIBNGHTTP2
+  throw DL_ABORT_EX("HTTP/2 support is not available in this build");
+#endif // !HAVE_LIBNGHTTP2
+}
+
+bool HttpConnection::isHTTP2Enabled() const
+{
+#ifdef HAVE_LIBNGHTTP2
+  return static_cast<bool>(http2Connection_);
+#else  // !HAVE_LIBNGHTTP2
+  return false;
+#endif // !HAVE_LIBNGHTTP2
+}
 
 } // namespace aria2

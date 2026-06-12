@@ -67,6 +67,7 @@ ARIA2_ARG_WITHOUT([libz])
 ARIA2_ARG_WITH([tcmalloc])
 ARIA2_ARG_WITH([jemalloc])
 ARIA2_ARG_WITHOUT([libssh2])
+ARIA2_ARG_WITHOUT([libnghttp2])
 
 ARIA2_ARG_DISABLE([ssl])
 ARIA2_ARG_DISABLE([bittorrent])
@@ -233,6 +234,19 @@ if test "x$with_libz" = "xyes"; then
     AC_CHECK_FUNCS([gzbuffer gzsetparams])
     CPPFLAGS=$save_CPPFLAGS
     LIBS=$save_LIBS
+  fi
+fi
+
+# Check availability of libnghttp2
+have_libnghttp2=no
+if test "x$with_libnghttp2" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGHTTP2], [libnghttp2 >= 1.0.0],
+                    [have_libnghttp2=yes], [have_libnghttp2=no])
+  if test "x$have_libnghttp2" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGHTTP2], [1],
+              [Define to 1 if you have libnghttp2.])
+  elif test "x$with_libnghttp2_requested" = "xyes"; then
+    ARIA2_DEP_NOT_MET([libnghttp2])
   fi
 fi
 
@@ -565,6 +579,7 @@ AM_CONDITIONAL([USE_LIBGCRYPT_MD], [ test "x$use_md" = "xlibgcrypt"])
 AM_CONDITIONAL([HAVE_OPENSSL], [ test "x$have_openssl" = "xyes" ])
 AM_CONDITIONAL([USE_OPENSSL_MD], [ test "x$use_md" = "xopenssl"])
 AM_CONDITIONAL([USE_INTERNAL_MD], [ test "x$use_md" = "xinternal"])
+AM_CONDITIONAL([HAVE_LIBNGHTTP2], [test "x$have_libnghttp2" = "xyes"])
 
 if test "x$have_libgmp" = "xyes" ||
    test "x$have_libgcrypt" = "xyes" ||
@@ -1096,6 +1111,7 @@ AppleTLS:       $have_appletls (LDFLAGS='$APPLETLS_LDFLAGS')
 WinTLS:         $have_wintls (LIBS='$WINTLS_LIBS')
 GnuTLS:         $have_libgnutls (CFLAGS='$LIBGNUTLS_CFLAGS' LIBS='$LIBGNUTLS_LIBS')
 OpenSSL:        $have_openssl (CFLAGS='$OPENSSL_CFLAGS' LIBS='$OPENSSL_LIBS')
+Libnghttp2:     $have_libnghttp2 (CFLAGS='$LIBNGHTTP2_CFLAGS' LIBS='$LIBNGHTTP2_LIBS')
 CA Bundle:      $ca_bundle
 LibNettle:      $have_libnettle (CFLAGS='$LIBNETTLE_CFLAGS' LIBS='$LIBNETTLE_LIBS')
 LibGmp:         $have_libgmp (CFLAGS='$LIBGMP_CFLAGS' LIBS='$LIBGMP_LIBS')

@@ -42,6 +42,14 @@ void FeatureConfigTest::testStrSupportedFeature()
 #else
   CPPUNIT_ASSERT(!https);
 #endif // ENABLE_SSL
+
+  const char* http2 = strSupportedFeature(FEATURE_HTTP2);
+#if defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
+  CPPUNIT_ASSERT(http2);
+#else  // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
+  CPPUNIT_ASSERT(!http2);
+#endif // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
+
   CPPUNIT_ASSERT(!strSupportedFeature(MAX_FEATURE));
 
   auto sftp = strSupportedFeature(FEATURE_SFTP);
@@ -75,6 +83,10 @@ void FeatureConfigTest::testFeatureSummary()
 #ifdef ENABLE_SSL
       "HTTPS",
 #endif // ENABLE_SSL
+
+#if defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
+      "HTTP/2",
+#endif // defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
 
       "Message Digest",
 

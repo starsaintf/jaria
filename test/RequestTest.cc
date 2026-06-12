@@ -22,6 +22,7 @@ class RequestTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testRedirectUri_uriNormalization);
   CPPUNIT_TEST(testResetUri);
   CPPUNIT_TEST(testResetUri_supportsPersistentConnection);
+  CPPUNIT_TEST(testResetUri_keepsHTTP2Disabled);
   CPPUNIT_TEST(testInnerLink);
   CPPUNIT_TEST(testInnerLinkInReferer);
   CPPUNIT_TEST(testGetURIHost);
@@ -38,6 +39,7 @@ public:
   void testRedirectUri_uriNormalization();
   void testResetUri();
   void testResetUri_supportsPersistentConnection();
+  void testResetUri_keepsHTTP2Disabled();
   void testInnerLink();
   void testInnerLinkInReferer();
   void testGetURIHost();
@@ -226,6 +228,17 @@ void RequestTest::testResetUri_supportsPersistentConnection()
   CPPUNIT_ASSERT(!req.supportsPersistentConnection());
   req.resetUri();
   CPPUNIT_ASSERT(req.supportsPersistentConnection());
+}
+
+void RequestTest::testResetUri_keepsHTTP2Disabled()
+{
+  Request req;
+  CPPUNIT_ASSERT(req.setUri("https://host/file"));
+  CPPUNIT_ASSERT(!req.isHTTP2Disabled());
+  req.disableHTTP2();
+  req.redirectUri("https://host/redirected");
+  req.resetUri();
+  CPPUNIT_ASSERT(req.isHTTP2Disabled());
 }
 
 void RequestTest::testRedirectUri_supportsPersistentConnection()

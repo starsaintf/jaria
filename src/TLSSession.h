@@ -39,6 +39,8 @@
 #include "a2netcompat.h"
 #include "TLSContext.h"
 
+#include <vector>
+
 namespace aria2 {
 
 enum TLSDirection { TLS_WANT_READ = 1, TLS_WANT_WRITE };
@@ -67,6 +69,18 @@ public:
   // client side session. This function returns TLS_ERR_OK if it
   // succeeds, or TLS_ERR_ERROR.
   virtual int setSNIHostname(const std::string& hostname) = 0;
+
+  // Sets TLS application protocols, such as "h2" and "http/1.1",
+  // offered during TLS negotiation. Backends that do not support ALPN
+  // should accept this call and negotiate no application protocol.
+  virtual int setApplicationProtocols(const std::vector<std::string>&)
+  {
+    return TLS_ERR_OK;
+  }
+
+  // Returns the negotiated application protocol, or an empty string if
+  // no protocol was negotiated or the backend does not support ALPN.
+  virtual std::string getNegotiatedApplicationProtocol() const { return ""; }
 
   // Closes the SSL/TLS session. Don't close underlying transport
   // socket. This function returns TLS_ERR_OK if it succeeds, or
@@ -118,6 +132,10 @@ private:
   TLSSession(const TLSSession&);
   TLSSession& operator=(const TLSSession&);
 };
+
+std::vector<unsigned char>
+encodeTLSApplicationProtocols(const std::vector<std::string>& protocols);
+
 } // namespace aria2
 
 #endif // TLS_SESSION_H

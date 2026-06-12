@@ -52,6 +52,13 @@ public:
   virtual ~OpenSSLTLSSession();
   virtual int init(sock_t sockfd) CXX11_OVERRIDE;
   virtual int setSNIHostname(const std::string& hostname) CXX11_OVERRIDE;
+  virtual int
+  setApplicationProtocols(const std::vector<std::string>& protocols)
+      CXX11_OVERRIDE;
+  virtual std::string getNegotiatedApplicationProtocol() const CXX11_OVERRIDE
+  {
+    return negotiatedApplicationProtocol_;
+  }
   virtual int closeConnection() CXX11_OVERRIDE;
   virtual int checkDirection() CXX11_OVERRIDE;
   virtual ssize_t writeData(const void* data, size_t len) CXX11_OVERRIDE;
@@ -66,6 +73,7 @@ private:
   int handshake(TLSVersion& version);
   SSL* ssl_;
   OpenSSLTLSContext* tlsContext_;
+  std::string negotiatedApplicationProtocol_;
   // Last error code from openSSL library functions
   int rv_;
 };

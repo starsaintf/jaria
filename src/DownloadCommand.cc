@@ -73,6 +73,17 @@
 
 namespace aria2 {
 
+std::string createUnexpectedEOFMessage(
+    const std::shared_ptr<Segment>& segment)
+{
+  if (!segment || segment->getLength() == 0) {
+    return EX_GOT_EOF;
+  }
+  return fmt("Got EOF from the server before completing response body "
+             "(%" PRId64 "/%" PRId64 " bytes received).",
+             segment->getWrittenLength(), segment->getLength());
+}
+
 DownloadCommand::DownloadCommand(
     cuid_t cuid, const std::shared_ptr<Request>& req,
     const std::shared_ptr<FileEntry>& fileEntry, RequestGroup* requestGroup,
@@ -231,7 +242,7 @@ bool DownloadCommand::executeInternal()
   }
 
   if (!segmentPartComplete && eof) {
-    throw DL_RETRY_EX(EX_GOT_EOF);
+    throw DL_RETRY_EX(createUnexpectedEOFMessage(segment));
   }
 
   if (segmentPartComplete) {

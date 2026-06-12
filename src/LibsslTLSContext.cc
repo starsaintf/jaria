@@ -35,17 +35,20 @@
 #include "LibsslTLSContext.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <sstream>
 
 #include <openssl/err.h>
 #include <openssl/pkcs12.h>
 #include <openssl/bio.h>
+#include <openssl/x509.h>
 
 #include "LogFactory.h"
 #include "Logger.h"
 #include "fmt.h"
 #include "message.h"
 #include "BufferedFile.h"
+#include "File.h"
 
 namespace {
 struct bio_deleter {
@@ -91,6 +94,93 @@ typedef std::unique_ptr<STACK_OF(X509), x509_sk_deleter> x509_sk_t;
 } // namespace
 
 namespace aria2 {
+
+namespace {
+void addCandidate(std::vector<std::string>& candidates, const char* path)
+{
+  if (path && *path) {
+    candidates.push_back(path);
+  }
+}
+
+void addCandidate(std::vector<std::string>& candidates,
+                  const std::string& path)
+{
+  if (!path.empty()) {
+    candidates.push_back(path);
+  }
+}
+
+std::vector<std::string> splitSearchPath(const char* path)
+{
+  std::vector<std::string> dirs;
+  if (!path || !*path) {
+    return dirs;
+  }
+
+#ifdef __MINGW32__
+  const char sep = ';';
+#else  // !__MINGW32__
+  const char sep = ':';
+#endif // !__MINGW32__
+
+  std::string value = path;
+  size_t first = 0;
+  for (;;) {
+    size_t last = value.find(sep, first);
+    auto dir = value.substr(first, last == std::string::npos
+                                       ? std::string::npos
+                                       : last - first);
+    if (!dir.empty()) {
+      dirs.push_back(dir);
+    }
+    if (last == std::string::npos) {
+      break;
+    }
+    first = last + 1;
+  }
+  return dirs;
+}
+
+std::vector<std::string> createOpenSSLSystemCAFileCandidates()
+{
+  std::vector<std::string> candidates;
+
+  addCandidate(candidates, getenv("SSL_CERT_FILE"));
+  addCandidate(candidates, getenv("CURL_CA_BUNDLE"));
+  addCandidate(candidates, X509_get_default_cert_file());
+
+  for (const auto& dir : splitSearchPath(getenv("PATH"))) {
+    addCandidate(candidates, dir + "/../etc/pki/ca-trust/extracted/openssl/"
+                                    "ca-bundle.trust.crt");
+    addCandidate(candidates, dir + "/../../etc/pki/ca-trust/extracted/"
+                                    "openssl/ca-bundle.trust.crt");
+    addCandidate(candidates, dir + "/../ssl/certs/ca-bundle.crt");
+    addCandidate(candidates, dir + "/../../usr/ssl/certs/ca-bundle.crt");
+  }
+
+  addCandidate(candidates,
+               "/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt");
+  addCandidate(candidates, "/etc/pki/tls/certs/ca-bundle.crt");
+  addCandidate(candidates, "/etc/ssl/certs/ca-certificates.crt");
+  addCandidate(candidates, "/etc/ssl/cert.pem");
+  addCandidate(candidates, "/usr/ssl/certs/ca-bundle.crt");
+  addCandidate(candidates, "/usr/local/ssl/cert.pem");
+
+  return candidates;
+}
+} // namespace
+
+std::string findOpenSSLSystemCAFile(
+    const std::vector<std::string>& candidates)
+{
+  for (const auto& candidate : candidates) {
+    if (!candidate.empty() && File(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return "";
+}
 
 TLSContext* TLSContext::make(TLSSessionSide side, TLSVersion minVer)
 {
@@ -275,15 +365,29 @@ bool OpenSSLTLSContext::addP12CredentialFile(const std::string& p12file)
 
 bool OpenSSLTLSContext::addSystemTrustedCACerts()
 {
+  bool loadedDefaultPaths = false;
   if (SSL_CTX_set_default_verify_paths(sslCtx_) != 1) {
     A2_LOG_INFO(fmt(MSG_LOADING_SYSTEM_TRUSTED_CA_CERTS_FAILED,
                     ERR_error_string(ERR_get_error(), nullptr)));
-    return false;
   }
   else {
+    loadedDefaultPaths = true;
     A2_LOG_INFO("System trusted CA certificates were successfully added.");
-    return true;
   }
+
+  auto caFile = findOpenSSLSystemCAFile(createOpenSSLSystemCAFileCandidates());
+  if (!caFile.empty()) {
+    if (SSL_CTX_load_verify_locations(sslCtx_, caFile.c_str(), nullptr) == 1) {
+      A2_LOG_INFO(fmt("System trusted CA certificate file %s was "
+                      "successfully added.",
+                      caFile.c_str()));
+      return true;
+    }
+    A2_LOG_INFO(fmt(MSG_LOADING_TRUSTED_CA_CERT_FAILED, caFile.c_str(),
+                    ERR_error_string(ERR_get_error(), nullptr)));
+  }
+
+  return loadedDefaultPaths;
 }
 
 bool OpenSSLTLSContext::addTrustedCACertFile(const std::string& certfile)

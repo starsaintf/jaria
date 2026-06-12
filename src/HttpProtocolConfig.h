@@ -2,7 +2,7 @@
 /*
  * aria2 - The high speed download utility
  *
- * Copyright (C) 2011 Tatsuhiro Tsujikawa
+ * Copyright (C) 2026 Tatsuhiro Tsujikawa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,64 +32,23 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
-#ifndef D_SOCKET_RECV_BUFFER_H
-#define D_SOCKET_RECV_BUFFER_H
+#ifndef D_HTTP_PROTOCOL_CONFIG_H
+#define D_HTTP_PROTOCOL_CONFIG_H
 
 #include "common.h"
 
-#include <memory>
-#include <array>
-#include <utility>
-
-#include "a2functional.h"
+#include <string>
+#include <vector>
 
 namespace aria2 {
 
-class SocketCore;
+class Option;
 
-class SocketRecvBufferDataSource {
-public:
-  virtual ~SocketRecvBufferDataSource() = default;
-  virtual void readData(void* data, size_t& len) = 0;
-};
+extern const std::string A2_ALPN_HTTP2;
+extern const std::string A2_ALPN_HTTP11;
 
-class SocketRecvBuffer {
-public:
-  SocketRecvBuffer(std::shared_ptr<SocketCore> socket);
-  ~SocketRecvBuffer();
-  // Reads data from socket as much as capacity allows. Returns the
-  // number of bytes read.
-  ssize_t recv();
-  // Truncates the contents of buffer to 0.
-  void truncateBuffer();
-  // Drains first n bytes of data from buffer.  It is an programmer's
-  // responsibility to ensure that n is smaller or equal to the
-  // buffered data.
-  void drain(size_t n);
-
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
-
-  const unsigned char* getBuffer() const { return pos_; }
-
-  size_t getBufferLength() const { return last_ - pos_; }
-
-  bool bufferEmpty() const { return pos_ == last_; }
-
-  void setDataSource(std::shared_ptr<SocketRecvBufferDataSource> dataSource)
-  {
-    dataSource_ = std::move(dataSource);
-  }
-
-  void clearDataSource() { dataSource_.reset(); }
-
-private:
-  std::array<unsigned char, 16_k> buf_;
-  std::shared_ptr<SocketCore> socket_;
-  std::shared_ptr<SocketRecvBufferDataSource> dataSource_;
-  unsigned char* pos_;
-  unsigned char* last_;
-};
+std::vector<std::string> getHTTPApplicationProtocols(const Option* option);
 
 } // namespace aria2
 
-#endif // D_SOCKET_RECV_BUFFER_H
+#endif // D_HTTP_PROTOCOL_CONFIG_H

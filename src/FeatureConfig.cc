@@ -70,6 +70,9 @@
 #ifdef HAVE_LIBSSH2
 #  include <libssh2.h>
 #endif // HAVE_LIBSSH2
+#ifdef HAVE_LIBNGHTTP2
+#  include <nghttp2/nghttp2.h>
+#endif // HAVE_LIBNGHTTP2
 #include "util.h"
 
 namespace aria2 {
@@ -153,6 +156,14 @@ const char* strSupportedFeature(int feature)
 #else  // !ENABLE_SSL
     return nullptr;
 #endif // !ENABLE_SSL
+    break;
+
+  case (FEATURE_HTTP2):
+#if defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
+    return "HTTP/2";
+#else  // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
+    return nullptr;
+#endif // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
     break;
 
   case (FEATURE_MESSAGE_DIGEST):
@@ -240,6 +251,14 @@ std::string usedLibs()
 #ifdef HAVE_LIBSSH2
   res += "libssh2/" LIBSSH2_VERSION " ";
 #endif // HAVE_LIBSSH2
+#ifdef HAVE_LIBNGHTTP2
+  auto nghttp2 = nghttp2_version(0);
+  if (nghttp2) {
+    res += "nghttp2/";
+    res += nghttp2->version_str;
+    res += " ";
+  }
+#endif // HAVE_LIBNGHTTP2
 
   if (!res.empty()) {
     res.erase(res.length() - 1);

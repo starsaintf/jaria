@@ -38,6 +38,7 @@
 #include "common.h"
 
 #include <string>
+#include <vector>
 
 #include <openssl/ssl.h>
 
@@ -45,6 +46,8 @@
 #include "DlAbortEx.h"
 
 namespace aria2 {
+
+std::string findOpenSSLSystemCAFile(const std::vector<std::string>& candidates);
 
 class OpenSSLTLSContext : public TLSContext {
 public:

@@ -59,6 +59,7 @@ Request::Request()
       supportsPersistentConnection_(true),
       keepAliveHint_(false),
       pipeliningHint_(false),
+      http2Disabled_(false),
       maxPipelinedRequest_(1),
       removalRequested_(false),
       connectedPort_(0),

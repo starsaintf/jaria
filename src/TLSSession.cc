@@ -2,7 +2,7 @@
 /*
  * aria2 - The high speed download utility
  *
- * Copyright (C) 2011 Tatsuhiro Tsujikawa
+ * Copyright (C) 2026 Tatsuhiro Tsujikawa
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,64 +32,24 @@
  * files in the program, then also delete it here.
  */
 /* copyright --> */
-#ifndef D_SOCKET_RECV_BUFFER_H
-#define D_SOCKET_RECV_BUFFER_H
-
-#include "common.h"
-
-#include <memory>
-#include <array>
-#include <utility>
-
-#include "a2functional.h"
+#include "TLSSession.h"
 
 namespace aria2 {
 
-class SocketCore;
+std::vector<unsigned char>
+encodeTLSApplicationProtocols(const std::vector<std::string>& protocols)
+{
+  std::vector<unsigned char> encoded;
 
-class SocketRecvBufferDataSource {
-public:
-  virtual ~SocketRecvBufferDataSource() = default;
-  virtual void readData(void* data, size_t& len) = 0;
-};
-
-class SocketRecvBuffer {
-public:
-  SocketRecvBuffer(std::shared_ptr<SocketCore> socket);
-  ~SocketRecvBuffer();
-  // Reads data from socket as much as capacity allows. Returns the
-  // number of bytes read.
-  ssize_t recv();
-  // Truncates the contents of buffer to 0.
-  void truncateBuffer();
-  // Drains first n bytes of data from buffer.  It is an programmer's
-  // responsibility to ensure that n is smaller or equal to the
-  // buffered data.
-  void drain(size_t n);
-
-  const std::shared_ptr<SocketCore>& getSocket() const { return socket_; }
-
-  const unsigned char* getBuffer() const { return pos_; }
-
-  size_t getBufferLength() const { return last_ - pos_; }
-
-  bool bufferEmpty() const { return pos_ == last_; }
-
-  void setDataSource(std::shared_ptr<SocketRecvBufferDataSource> dataSource)
-  {
-    dataSource_ = std::move(dataSource);
+  for (const auto& protocol : protocols) {
+    if (protocol.empty() || protocol.size() > 255) {
+      continue;
+    }
+    encoded.push_back(static_cast<unsigned char>(protocol.size()));
+    encoded.insert(encoded.end(), protocol.begin(), protocol.end());
   }
 
-  void clearDataSource() { dataSource_.reset(); }
-
-private:
-  std::array<unsigned char, 16_k> buf_;
-  std::shared_ptr<SocketCore> socket_;
-  std::shared_ptr<SocketRecvBufferDataSource> dataSource_;
-  unsigned char* pos_;
-  unsigned char* last_;
-};
+  return encoded;
+}
 
 } // namespace aria2
-
-#endif // D_SOCKET_RECV_BUFFER_H

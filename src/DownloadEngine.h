@@ -40,6 +40,7 @@
 #include <string>
 #include <deque>
 #include <map>
+#include <set>
 #include <vector>
 #include <memory>
 
@@ -170,6 +171,8 @@ private:
 
   std::unique_ptr<util::security::HMAC> tokenHMAC_;
   std::unique_ptr<util::security::HMACResult> tokenExpected_;
+
+  std::set<std::string> http2DisabledOrigins_;
 
 public:
   DownloadEngine(std::unique_ptr<EventPoll> eventPoll);
@@ -313,6 +316,10 @@ public:
                         uint16_t port);
 
   void removeCachedIPAddress(const std::string& hostname, uint16_t port);
+
+  void disableHTTP2ForOrigin(const Request* request);
+
+  bool isHTTP2DisabledForOrigin(const Request* request) const;
 
   void setAuthConfigFactory(std::unique_ptr<AuthConfigFactory> factory);
 

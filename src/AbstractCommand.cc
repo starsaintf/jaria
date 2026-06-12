@@ -366,6 +366,9 @@ bool AbstractCommand::execute()
     A2_LOG_INFO_EX(
         fmt(MSG_RESTARTING_DOWNLOAD, getCuid(), req_->getUri().c_str()),
         DL_RETRY_EX2(fmt("URI=%s", req_->getCurrentUri().c_str()), err));
+    if (req_->isHTTP2Disabled()) {
+      e_->disableHTTP2ForOrigin(req_.get());
+    }
     req_->addTryCount();
     req_->resetRedirectCount();
     req_->resetUri();

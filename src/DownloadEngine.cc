@@ -92,6 +92,12 @@ volatile sig_atomic_t globalHaltRequested = 0;
 
 namespace {
 constexpr auto DEFAULT_REFRESH_INTERVAL = 1_s;
+
+std::string createHTTP2OriginKey(const Request* request)
+{
+  return request->getProtocol() + "://" + request->getHost() + ":" +
+         util::uitos(request->getPort());
+}
 } // namespace
 
 DownloadEngine::DownloadEngine(std::unique_ptr<EventPoll> eventPoll)
@@ -551,6 +557,25 @@ void DownloadEngine::removeCachedIPAddress(const std::string& hostname,
                                            uint16_t port)
 {
   dnsCache_->remove(hostname, port);
+}
+
+void DownloadEngine::disableHTTP2ForOrigin(const Request* request)
+{
+  if (!request || request->getProtocol() != "https") {
+    return;
+  }
+  auto key = createHTTP2OriginKey(request);
+  if (http2DisabledOrigins_.insert(key).second) {
+    A2_LOG_INFO(fmt("Disabling HTTP/2 for %s", key.c_str()));
+  }
+}
+
+bool DownloadEngine::isHTTP2DisabledForOrigin(const Request* request) const
+{
+  if (!request || request->getProtocol() != "https") {
+    return false;
+  }
+  return http2DisabledOrigins_.count(createHTTP2OriginKey(request)) == 1;
 }
 
 void DownloadEngine::setAuthConfigFactory(

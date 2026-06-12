@@ -92,6 +92,8 @@ private:
   static std::shared_ptr<TLSContext> svTlsContext_;
 
   std::shared_ptr<TLSSession> tlsSession_;
+  std::vector<std::string> tlsApplicationProtocols_;
+  std::string negotiatedTLSApplicationProtocol_;
 
   /**
    * Makes this socket secure. The connection must be established
@@ -296,6 +298,17 @@ public:
   // If you are going to verify peer's certificate, hostname must be
   // supplied.
   bool tlsConnect(const std::string& hostname);
+
+  void
+  setTLSApplicationProtocols(const std::vector<std::string>& protocols)
+  {
+    tlsApplicationProtocols_ = protocols;
+  }
+
+  const std::string& getNegotiatedTLSApplicationProtocol() const
+  {
+    return negotiatedTLSApplicationProtocol_;
+  }
 #endif // ENABLE_SSL
 
 #ifdef HAVE_LIBSSH2

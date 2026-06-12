@@ -1076,6 +1076,17 @@ std::vector<OptionHandler*> OptionHandlerFactory::createOptionHandlers()
   }
   {
     OptionHandler* op(new BooleanOptionHandler(
+        PREF_ENABLE_HTTP2, TEXT_ENABLE_HTTP2, A2_V_FALSE,
+        OptionHandler::OPT_ARG));
+    op->addTag(TAG_HTTP);
+    op->addTag(TAG_HTTPS);
+    op->setInitialOption(true);
+    op->setChangeGlobalOption(true);
+    op->setChangeOptionForReserved(true);
+    handlers.push_back(op);
+  }
+  {
+    OptionHandler* op(new BooleanOptionHandler(
         PREF_ENABLE_HTTP_PIPELINING, TEXT_ENABLE_HTTP_PIPELINING, A2_V_FALSE,
         OptionHandler::OPT_ARG));
     op->addTag(TAG_HTTP);

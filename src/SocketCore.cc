@@ -925,12 +925,18 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
   if (secure_ == A2_TLS_NONE) {
     // Do some initial setup
     A2_LOG_DEBUG("Creating TLS session");
+    negotiatedTLSApplicationProtocol_.clear();
     tlsSession_.reset(TLSSession::make(tlsctx));
     auto rv = tlsSession_->init(sockfd_);
     if (rv != TLS_ERR_OK) {
       std::string error = tlsSession_->getLastErrorString();
       tlsSession_.reset();
       throw DL_ABORT_EX(fmt(EX_SSL_INIT_FAILURE, error.c_str()));
+    }
+    rv = tlsSession_->setApplicationProtocols(tlsApplicationProtocols_);
+    if (rv != TLS_ERR_OK) {
+      throw DL_ABORT_EX(fmt(EX_SSL_INIT_FAILURE,
+                            tlsSession_->getLastErrorString().c_str()));
     }
     // Check hostname is not numeric and it includes ".". Setting
     // "localhost" will produce TLS alert with GNUTLS.
@@ -990,6 +996,8 @@ bool SocketCore::tlsHandshake(TLSContext* tlsctx, const std::string& hostname)
       }
 
       auto peerInfo = ss.str();
+      negotiatedTLSApplicationProtocol_ =
+          tlsSession_->getNegotiatedApplicationProtocol();
 
       A2_LOG_DEBUG(fmt("Securely connected to %s with %s", peerInfo.c_str(),
                        tlsVersion.c_str()));

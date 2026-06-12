@@ -19,7 +19,11 @@ aria2c_SOURCES = AllTest.cc\
 	UtilTest2.cc\
 	UtilSecurityTest.cc\
 	UriListParserTest.cc\
+	SocketRecvBufferTest.cc\
+	HttpProtocolConfigTest.cc\
 	HttpHeaderProcessorTest.cc\
+	DownloadCommandTest.cc\
+	DownloadEngineTest.cc\
 	RequestTest.cc\
 	HttpRequestTest.cc\
 	RequestGroupManTest.cc\
@@ -95,6 +99,14 @@ aria2c_SOURCES = AllTest.cc\
 if ENABLE_XML_RPC
 aria2c_SOURCES += XmlRpcRequestParserControllerTest.cc
 endif # ENABLE_XML_RPC
+
+if ENABLE_SSL
+aria2c_SOURCES += TLSSessionTest.cc
+endif # ENABLE_SSL
+
+if HAVE_LIBNGHTTP2
+aria2c_SOURCES += Http2ConnectionTest.cc
+endif # HAVE_LIBNGHTTP2
 
 if HAVE_SOME_FALLOCATE
 aria2c_SOURCES += FallocFileAllocationIteratorTest.cc
@@ -258,6 +270,7 @@ aria2c_LDADD = \
 	@LIBGCRYPT_LIBS@ \
 	@LIBSSH2_LIBS@ \
 	@LIBCARES_LIBS@ \
+	@LIBNGHTTP2_LIBS@ \
 	@WSLAY_LIBS@ \
 	@CPPUNIT_LIBS@ \
 	@TCMALLOC_LIBS@ \
@@ -285,6 +298,7 @@ AM_CPPFLAGS = \
 	@LIBGCRYPT_CFLAGS@ \
 	@LIBSSH2_CFLAGS@ \
 	@LIBCARES_CFLAGS@ \
+	@LIBNGHTTP2_CFLAGS@ \
 	@WSLAY_CFLAGS@ \
 	@TCMALLOC_CFLAGS@ \
 	@JEMALLOC_CFLAGS@
