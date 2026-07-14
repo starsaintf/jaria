@@ -68,6 +68,7 @@ private:
   // enable pipelining if possible.
   bool pipeliningHint_;
   bool http2Disabled_;
+  bool http2FallbackRetryPending_;
   // maximum number of pipelined requests
   int maxPipelinedRequest_;
   std::shared_ptr<PeerStat> peerStat_;
@@ -134,10 +135,22 @@ public:
 
   bool isPipeliningHint() const { return pipeliningHint_; }
 
-  void disableHTTP2() { http2Disabled_ = true; }
+  void disableHTTP2()
+  {
+    if (!http2Disabled_) {
+      http2FallbackRetryPending_ = true;
+    }
+    http2Disabled_ = true;
+  }
 
   bool isHTTP2Disabled() const { return http2Disabled_; }
 
+  bool consumeHTTP2FallbackRetry()
+  {
+    bool pending = http2FallbackRetryPending_;
+    http2FallbackRetryPending_ = false;
+    return pending;
+  }
 
   void setMaxPipelinedRequest(int num);
 

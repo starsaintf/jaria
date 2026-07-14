@@ -369,7 +369,10 @@ bool AbstractCommand::execute()
     if (req_->isHTTP2Disabled()) {
       e_->disableHTTP2ForOrigin(req_.get());
     }
-    req_->addTryCount();
+    bool http2FallbackRetry = req_->consumeHTTP2FallbackRetry();
+    if (!http2FallbackRetry) {
+      req_->addTryCount();
+    }
     req_->resetRedirectCount();
     req_->resetUri();
 

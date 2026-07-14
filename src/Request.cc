@@ -60,6 +60,7 @@ Request::Request()
       keepAliveHint_(false),
       pipeliningHint_(false),
       http2Disabled_(false),
+      http2FallbackRetryPending_(false),
       maxPipelinedRequest_(1),
       removalRequested_(false),
       connectedPort_(0),
