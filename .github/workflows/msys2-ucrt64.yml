@@ -1,0 +1,81 @@
+name: msys2-ucrt64
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live_smoke:
+        description: Run external HTTP/2 download smoke tests
+        required: false
+        default: "false"
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          base-devel
+          git
+          perl
+          pkgconf
+          autoconf
+          automake
+          libtool
+          gettext-devel
+          bison
+          make
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-cppunit
+          mingw-w64-ucrt-x86_64-zlib
+          mingw-w64-ucrt-x86_64-openssl
+          mingw-w64-ucrt-x86_64-nghttp2
+
+    - name: Generate autotools files
+      run: autoreconf -i
+
+    - name: Configure OpenSSL + nghttp2 build
+      run: |
+        mkdir build
+        cd build
+        ../configure \
+          --disable-dependency-tracking \
+          --disable-websocket \
+          --without-wintls \
+          --without-gnutls \
+          --without-libgcrypt \
+          --without-libnettle \
+          --without-libssh2 \
+          --without-sqlite3 \
+          --without-libxml2 \
+          --without-libexpat \
+          --without-libcares \
+          --with-openssl \
+          --with-libnghttp2 \
+          --enable-libaria2=no \
+          CXXFLAGS="-O0 -g"
+
+    - name: Build source
+      run: make -C build/src -j2 V=0
+
+    - name: Run unit tests
+      run: make -C build/test check -j2 V=0
+
+    - name: Verify HTTP/2 feature is compiled in
+      run: |
+        build/src/aria2c.exe --version
+        build/src/aria2c.exe --version | grep "HTTP/2"
+
+    - name: Optional live HTTP/2 smoke tests
+      if: github.event_name == 'workflow_dispatch' && inputs.live_smoke == 'true'
+      run: test/live-http2-smoke.sh build/src/aria2c.exe

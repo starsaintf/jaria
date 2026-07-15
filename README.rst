@@ -1,6 +1,13 @@
 aria2 - The ultra fast download utility
 =======================================
 
+Jaria fork note
+---------------
+
+This branch carries Jaria HTTP transport work, including optional
+HTTP/2 support with OpenSSL ALPN, origin-scoped HTTP/2 fallback to
+HTTP/1.1, and MSYS2/UCRT64 validation. See ``JARIA.md`` for details.
+
 Disclaimer
 ----------
 This program comes with no warranty.

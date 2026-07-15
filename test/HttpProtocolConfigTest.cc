@@ -18,11 +18,13 @@ class HttpProtocolConfigTest : public CppUnit::TestFixture {
 
   CPPUNIT_TEST_SUITE(HttpProtocolConfigTest);
   CPPUNIT_TEST(testGetTLSApplicationProtocols);
+  CPPUNIT_TEST(testHTTP1FallbackProtocolIsAlwaysAdvertised);
   CPPUNIT_TEST(testEnableHTTP2OptionIsParseable);
   CPPUNIT_TEST_SUITE_END();
 
 public:
   void testGetTLSApplicationProtocols();
+  void testHTTP1FallbackProtocolIsAlwaysAdvertised();
   void testEnableHTTP2OptionIsParseable();
 };
 
@@ -48,6 +50,19 @@ void HttpProtocolConfigTest::testGetTLSApplicationProtocols()
   CPPUNIT_ASSERT_EQUAL((size_t)1, protocols.size());
   CPPUNIT_ASSERT_EQUAL(std::string("http/1.1"), protocols[0]);
 #endif // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
+}
+
+void HttpProtocolConfigTest::testHTTP1FallbackProtocolIsAlwaysAdvertised()
+{
+  auto protocols = getHTTPApplicationProtocols(nullptr);
+  CPPUNIT_ASSERT_EQUAL((size_t)1, protocols.size());
+  CPPUNIT_ASSERT_EQUAL(std::string("http/1.1"), protocols[0]);
+
+  Option option;
+  option.put(PREF_ENABLE_HTTP2, "true");
+  protocols = getHTTPApplicationProtocols(&option);
+  CPPUNIT_ASSERT(!protocols.empty());
+  CPPUNIT_ASSERT_EQUAL(std::string("http/1.1"), protocols.back());
 }
 
 void HttpProtocolConfigTest::testEnableHTTP2OptionIsParseable()
