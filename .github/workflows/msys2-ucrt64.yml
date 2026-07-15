@@ -75,6 +75,7 @@ jobs:
       run: |
         build/src/aria2c.exe --version
         build/src/aria2c.exe --version | grep "HTTP/2"
+        build/src/aria2c.exe --help=#http | grep -- "--enable-http3"
 
     - name: Optional live HTTP/2 smoke tests
       if: github.event_name == 'workflow_dispatch' && inputs.live_smoke == 'true'

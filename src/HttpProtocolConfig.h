@@ -45,9 +45,14 @@ namespace aria2 {
 class Option;
 
 extern const std::string A2_ALPN_HTTP2;
+extern const std::string A2_ALPN_HTTP3;
 extern const std::string A2_ALPN_HTTP11;
 
 std::vector<std::string> getHTTPApplicationProtocols(const Option* option);
+
+bool isHTTP3Available();
+
+bool shouldEnableHTTP3(const Option* option);
 
 } // namespace aria2
 

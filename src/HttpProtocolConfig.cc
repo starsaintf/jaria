@@ -40,6 +40,7 @@
 namespace aria2 {
 
 const std::string A2_ALPN_HTTP2 = "h2";
+const std::string A2_ALPN_HTTP3 = "h3";
 const std::string A2_ALPN_HTTP11 = "http/1.1";
 
 std::vector<std::string> getHTTPApplicationProtocols(const Option* option)
@@ -54,6 +55,20 @@ std::vector<std::string> getHTTPApplicationProtocols(const Option* option)
 
   protocols.push_back(A2_ALPN_HTTP11);
   return protocols;
+}
+
+bool isHTTP3Available()
+{
+#ifdef HAVE_HTTP3
+  return true;
+#else  // !HAVE_HTTP3
+  return false;
+#endif // !HAVE_HTTP3
+}
+
+bool shouldEnableHTTP3(const Option* option)
+{
+  return option && option->getAsBool(PREF_ENABLE_HTTP3) && isHTTP3Available();
 }
 
 } // namespace aria2

@@ -73,6 +73,12 @@
 #ifdef HAVE_LIBNGHTTP2
 #  include <nghttp2/nghttp2.h>
 #endif // HAVE_LIBNGHTTP2
+#ifdef HAVE_LIBNGTCP2
+#  include <ngtcp2/ngtcp2.h>
+#endif // HAVE_LIBNGTCP2
+#ifdef HAVE_LIBNGHTTP3
+#  include <nghttp3/nghttp3.h>
+#endif // HAVE_LIBNGHTTP3
 #include "util.h"
 
 namespace aria2 {
@@ -164,6 +170,14 @@ const char* strSupportedFeature(int feature)
 #else  // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
     return nullptr;
 #endif // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
+    break;
+
+  case (FEATURE_HTTP3):
+#ifdef HAVE_HTTP3
+    return "HTTP/3";
+#else  // !HAVE_HTTP3
+    return nullptr;
+#endif // !HAVE_HTTP3
     break;
 
   case (FEATURE_MESSAGE_DIGEST):
@@ -259,6 +273,22 @@ std::string usedLibs()
     res += " ";
   }
 #endif // HAVE_LIBNGHTTP2
+#ifdef HAVE_LIBNGTCP2
+  auto ngtcp2 = ngtcp2_version(0);
+  if (ngtcp2) {
+    res += "ngtcp2/";
+    res += ngtcp2->version_str;
+    res += " ";
+  }
+#endif // HAVE_LIBNGTCP2
+#ifdef HAVE_LIBNGHTTP3
+  auto nghttp3 = nghttp3_version(0);
+  if (nghttp3) {
+    res += "nghttp3/";
+    res += nghttp3->version_str;
+    res += " ";
+  }
+#endif // HAVE_LIBNGHTTP3
 
   if (!res.empty()) {
     res.erase(res.length() - 1);

@@ -24,6 +24,7 @@ class RequestTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(testResetUri_supportsPersistentConnection);
   CPPUNIT_TEST(testResetUri_keepsHTTP2Disabled);
   CPPUNIT_TEST(testDisableHTTP2MarksFallbackRetryOnce);
+  CPPUNIT_TEST(testDisableHTTP3MarksFallbackRetryOnce);
   CPPUNIT_TEST(testInnerLink);
   CPPUNIT_TEST(testInnerLinkInReferer);
   CPPUNIT_TEST(testGetURIHost);
@@ -42,6 +43,7 @@ public:
   void testResetUri_supportsPersistentConnection();
   void testResetUri_keepsHTTP2Disabled();
   void testDisableHTTP2MarksFallbackRetryOnce();
+  void testDisableHTTP3MarksFallbackRetryOnce();
   void testInnerLink();
   void testInnerLinkInReferer();
   void testGetURIHost();
@@ -258,6 +260,23 @@ void RequestTest::testDisableHTTP2MarksFallbackRetryOnce()
   req.disableHTTP2();
 
   CPPUNIT_ASSERT(!req.consumeHTTP2FallbackRetry());
+}
+
+void RequestTest::testDisableHTTP3MarksFallbackRetryOnce()
+{
+  Request req;
+  CPPUNIT_ASSERT(!req.isHTTP3Disabled());
+  CPPUNIT_ASSERT(!req.consumeHTTP3FallbackRetry());
+
+  req.disableHTTP3();
+
+  CPPUNIT_ASSERT(req.isHTTP3Disabled());
+  CPPUNIT_ASSERT(req.consumeHTTP3FallbackRetry());
+  CPPUNIT_ASSERT(!req.consumeHTTP3FallbackRetry());
+
+  req.disableHTTP3();
+
+  CPPUNIT_ASSERT(!req.consumeHTTP3FallbackRetry());
 }
 
 void RequestTest::testRedirectUri_supportsPersistentConnection()

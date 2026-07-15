@@ -50,6 +50,13 @@ void FeatureConfigTest::testStrSupportedFeature()
   CPPUNIT_ASSERT(!http2);
 #endif // !(defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2))
 
+  const char* http3 = strSupportedFeature(FEATURE_HTTP3);
+#ifdef HAVE_HTTP3
+  CPPUNIT_ASSERT(http3);
+#else  // !HAVE_HTTP3
+  CPPUNIT_ASSERT(!http3);
+#endif // !HAVE_HTTP3
+
   CPPUNIT_ASSERT(!strSupportedFeature(MAX_FEATURE));
 
   auto sftp = strSupportedFeature(FEATURE_SFTP);
@@ -87,6 +94,10 @@ void FeatureConfigTest::testFeatureSummary()
 #if defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
       "HTTP/2",
 #endif // defined(ENABLE_SSL) && defined(HAVE_LIBNGHTTP2)
+
+#ifdef HAVE_HTTP3
+      "HTTP/3",
+#endif // HAVE_HTTP3
 
       "Message Digest",
 

@@ -61,6 +61,8 @@ Request::Request()
       pipeliningHint_(false),
       http2Disabled_(false),
       http2FallbackRetryPending_(false),
+      http3Disabled_(false),
+      http3FallbackRetryPending_(false),
       maxPipelinedRequest_(1),
       removalRequested_(false),
       connectedPort_(0),

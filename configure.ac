@@ -68,6 +68,8 @@ ARIA2_ARG_WITH([tcmalloc])
 ARIA2_ARG_WITH([jemalloc])
 ARIA2_ARG_WITHOUT([libssh2])
 ARIA2_ARG_WITHOUT([libnghttp2])
+ARIA2_ARG_WITHOUT([libngtcp2])
+ARIA2_ARG_WITHOUT([libnghttp3])
 
 ARIA2_ARG_DISABLE([ssl])
 ARIA2_ARG_DISABLE([bittorrent])
@@ -247,6 +249,31 @@ if test "x$with_libnghttp2" = "xyes"; then
               [Define to 1 if you have libnghttp2.])
   elif test "x$with_libnghttp2_requested" = "xyes"; then
     ARIA2_DEP_NOT_MET([libnghttp2])
+  fi
+fi
+
+# Check availability of libngtcp2/libnghttp3 for HTTP/3 over QUIC.
+have_libngtcp2=no
+if test "x$with_libngtcp2" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGTCP2], [libngtcp2 >= 1.0.0],
+                    [have_libngtcp2=yes], [have_libngtcp2=no])
+  if test "x$have_libngtcp2" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGTCP2], [1],
+              [Define to 1 if you have libngtcp2.])
+  elif test "x$with_libngtcp2_requested" = "xyes"; then
+    ARIA2_DEP_NOT_MET([libngtcp2])
+  fi
+fi
+
+have_libnghttp3=no
+if test "x$with_libnghttp3" = "xyes"; then
+  PKG_CHECK_MODULES([LIBNGHTTP3], [libnghttp3 >= 1.0.0],
+                    [have_libnghttp3=yes], [have_libnghttp3=no])
+  if test "x$have_libnghttp3" = "xyes"; then
+    AC_DEFINE([HAVE_LIBNGHTTP3], [1],
+              [Define to 1 if you have libnghttp3.])
+  elif test "x$with_libnghttp3_requested" = "xyes"; then
+    ARIA2_DEP_NOT_MET([libnghttp3])
   fi
 fi
 
@@ -564,6 +591,16 @@ else
   AM_CONDITIONAL([ENABLE_SSL], false)
 fi
 
+have_http3=no
+if test "x$have_ssl" = "xyes" &&
+   test "x$have_openssl" = "xyes" &&
+   test "x$have_libngtcp2" = "xyes" &&
+   test "x$have_libnghttp3" = "xyes"; then
+  have_http3=yes
+  AC_DEFINE([HAVE_HTTP3], [1],
+            [Define to 1 if HTTP/3 over QUIC support is available.])
+fi
+
 
 AM_CONDITIONAL([HAVE_OSX], [ test "x$have_osx" = "xyes" ])
 AM_CONDITIONAL([HAVE_APPLETLS], [ test "x$have_appletls" = "xyes" ])
@@ -580,6 +617,9 @@ AM_CONDITIONAL([HAVE_OPENSSL], [ test "x$have_openssl" = "xyes" ])
 AM_CONDITIONAL([USE_OPENSSL_MD], [ test "x$use_md" = "xopenssl"])
 AM_CONDITIONAL([USE_INTERNAL_MD], [ test "x$use_md" = "xinternal"])
 AM_CONDITIONAL([HAVE_LIBNGHTTP2], [test "x$have_libnghttp2" = "xyes"])
+AM_CONDITIONAL([HAVE_LIBNGTCP2], [test "x$have_libngtcp2" = "xyes"])
+AM_CONDITIONAL([HAVE_LIBNGHTTP3], [test "x$have_libnghttp3" = "xyes"])
+AM_CONDITIONAL([HAVE_HTTP3], [test "x$have_http3" = "xyes"])
 
 if test "x$have_libgmp" = "xyes" ||
    test "x$have_libgcrypt" = "xyes" ||
@@ -1112,6 +1152,9 @@ WinTLS:         $have_wintls (LIBS='$WINTLS_LIBS')
 GnuTLS:         $have_libgnutls (CFLAGS='$LIBGNUTLS_CFLAGS' LIBS='$LIBGNUTLS_LIBS')
 OpenSSL:        $have_openssl (CFLAGS='$OPENSSL_CFLAGS' LIBS='$OPENSSL_LIBS')
 Libnghttp2:     $have_libnghttp2 (CFLAGS='$LIBNGHTTP2_CFLAGS' LIBS='$LIBNGHTTP2_LIBS')
+Libngtcp2:      $have_libngtcp2 (CFLAGS='$LIBNGTCP2_CFLAGS' LIBS='$LIBNGTCP2_LIBS')
+Libnghttp3:     $have_libnghttp3 (CFLAGS='$LIBNGHTTP3_CFLAGS' LIBS='$LIBNGHTTP3_LIBS')
+HTTP/3:         $have_http3
 CA Bundle:      $ca_bundle
 LibNettle:      $have_libnettle (CFLAGS='$LIBNETTLE_CFLAGS' LIBS='$LIBNETTLE_LIBS')
 LibGmp:         $have_libgmp (CFLAGS='$LIBGMP_CFLAGS' LIBS='$LIBGMP_LIBS')

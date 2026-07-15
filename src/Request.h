@@ -69,6 +69,8 @@ private:
   bool pipeliningHint_;
   bool http2Disabled_;
   bool http2FallbackRetryPending_;
+  bool http3Disabled_;
+  bool http3FallbackRetryPending_;
   // maximum number of pipelined requests
   int maxPipelinedRequest_;
   std::shared_ptr<PeerStat> peerStat_;
@@ -149,6 +151,23 @@ public:
   {
     bool pending = http2FallbackRetryPending_;
     http2FallbackRetryPending_ = false;
+    return pending;
+  }
+
+  void disableHTTP3()
+  {
+    if (!http3Disabled_) {
+      http3FallbackRetryPending_ = true;
+    }
+    http3Disabled_ = true;
+  }
+
+  bool isHTTP3Disabled() const { return http3Disabled_; }
+
+  bool consumeHTTP3FallbackRetry()
+  {
+    bool pending = http3FallbackRetryPending_;
+    http3FallbackRetryPending_ = false;
     return pending;
   }
 

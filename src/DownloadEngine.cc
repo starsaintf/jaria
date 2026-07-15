@@ -98,6 +98,12 @@ std::string createHTTP2OriginKey(const Request* request)
   return request->getProtocol() + "://" + request->getHost() + ":" +
          util::uitos(request->getPort());
 }
+
+std::string createHTTP3OriginKey(const Request* request)
+{
+  return request->getProtocol() + "://" + request->getHost() + ":" +
+         util::uitos(request->getPort());
+}
 } // namespace
 
 DownloadEngine::DownloadEngine(std::unique_ptr<EventPoll> eventPoll)
@@ -576,6 +582,25 @@ bool DownloadEngine::isHTTP2DisabledForOrigin(const Request* request) const
     return false;
   }
   return http2DisabledOrigins_.count(createHTTP2OriginKey(request)) == 1;
+}
+
+void DownloadEngine::disableHTTP3ForOrigin(const Request* request)
+{
+  if (!request || request->getProtocol() != "https") {
+    return;
+  }
+  auto key = createHTTP3OriginKey(request);
+  if (http3DisabledOrigins_.insert(key).second) {
+    A2_LOG_INFO(fmt("Disabling HTTP/3 for %s", key.c_str()));
+  }
+}
+
+bool DownloadEngine::isHTTP3DisabledForOrigin(const Request* request) const
+{
+  if (!request || request->getProtocol() != "https") {
+    return false;
+  }
+  return http3DisabledOrigins_.count(createHTTP3OriginKey(request)) == 1;
 }
 
 void DownloadEngine::setAuthConfigFactory(

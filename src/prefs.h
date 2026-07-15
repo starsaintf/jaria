@@ -360,6 +360,8 @@ extern PrefPtr PREF_ENABLE_HTTP_KEEP_ALIVE;
 // values: true | false
 extern PrefPtr PREF_ENABLE_HTTP2;
 // values: true | false
+extern PrefPtr PREF_ENABLE_HTTP3;
+// values: true | false
 extern PrefPtr PREF_ENABLE_HTTP_PIPELINING;
 // value: 1*digit
 extern PrefPtr PREF_MAX_HTTP_PIPELINING;

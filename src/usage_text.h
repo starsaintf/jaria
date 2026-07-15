@@ -193,6 +193,9 @@
 #define TEXT_ENABLE_HTTP2                                               \
   _(" --enable-http2[=true|false] Offer HTTP/2 over TLS if aria2 is built\n" \
     "                              with libnghttp2.")
+#define TEXT_ENABLE_HTTP3                                               \
+  _(" --enable-http3[=true|false] Enable HTTP/3 over QUIC if aria2 is built\n" \
+    "                              with libngtcp2 and libnghttp3.")
 #define TEXT_ENABLE_HTTP_PIPELINING                                     \
   _(" --enable-http-pipelining[=true|false] Enable HTTP/1.1 pipelining.")
 #define TEXT_CHECK_INTEGRITY                                            \

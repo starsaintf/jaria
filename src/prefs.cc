@@ -407,6 +407,8 @@ PrefPtr PREF_ENABLE_HTTP_KEEP_ALIVE = makePref("enable-http-keep-alive");
 // values: true | false
 PrefPtr PREF_ENABLE_HTTP2 = makePref("enable-http2");
 // values: true | false
+PrefPtr PREF_ENABLE_HTTP3 = makePref("enable-http3");
+// values: true | false
 PrefPtr PREF_ENABLE_HTTP_PIPELINING = makePref("enable-http-pipelining");
 // value: 1*digit
 PrefPtr PREF_MAX_HTTP_PIPELINING = makePref("max-http-pipelining");

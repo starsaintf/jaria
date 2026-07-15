@@ -173,6 +173,7 @@ private:
   std::unique_ptr<util::security::HMACResult> tokenExpected_;
 
   std::set<std::string> http2DisabledOrigins_;
+  std::set<std::string> http3DisabledOrigins_;
 
 public:
   DownloadEngine(std::unique_ptr<EventPoll> eventPoll);
@@ -320,6 +321,10 @@ public:
   void disableHTTP2ForOrigin(const Request* request);
 
   bool isHTTP2DisabledForOrigin(const Request* request) const;
+
+  void disableHTTP3ForOrigin(const Request* request);
+
+  bool isHTTP3DisabledForOrigin(const Request* request) const;
 
   void setAuthConfigFactory(std::unique_ptr<AuthConfigFactory> factory);
 
