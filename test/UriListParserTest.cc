@@ -61,7 +61,7 @@ void UriListParserTest::testHasNext()
   CPPUNIT_ASSERT(flp.hasNext());
 
   flp.parseNext(uris, reqOp);
-  CPPUNIT_ASSERT_EQUAL(std::string("ftp://localhost/aria2.tar.bz2"),
+  CPPUNIT_ASSERT_EQUAL(std::string("http://localhost/aria2.tar.bz2"),
                        list2String(uris));
   CPPUNIT_ASSERT_EQUAL(std::string("/tmp"), reqOp.get(PREF_DIR));
   CPPUNIT_ASSERT_EQUAL(std::string("chunky_chocolate"), reqOp.get(PREF_OUT));
